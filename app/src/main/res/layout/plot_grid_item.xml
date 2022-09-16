@@ -8,12 +8,40 @@
         android:id="@+id/plotImage"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintDimensionRatio="1:1"
         android:adjustViewBounds="true"
         android:contentDescription="@string/tema_le_plot"
         android:scaleType="centerCrop"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+
+    <TextView
+        android:id="@+id/plotCreatedAt"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:background="@color/black_50_opacity"
+        android:padding="8dp"
+        android:textAppearance="@style/FirebaseUI.Text.Heading"
+        android:textColor="@color/design_default_color_on_primary"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/plotDelete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:contentDescription="@string/supprimer_le_plot"
+        android:src="@drawable/ic_baseline_delete_24"
+        app:backgroundTint="@color/design_default_color_error"
+        app:layout_constraintBottom_toTopOf="@+id/plotCreatedAt"
+        app:layout_constraintEnd_toEndOf="@+id/plotImage"
+        app:tint="@color/design_default_color_on_error"
+        android:visibility="gone"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

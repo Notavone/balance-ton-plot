@@ -16,11 +16,11 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/plotViewBackButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:contentDescription="@string/retour"
-        android:onClick="finish"
         android:scaleX="0.9"
         android:scaleY="0.9"
         android:src="@drawable/ic_baseline_arrow_back_24"
@@ -29,12 +29,25 @@
         app:layout_constraintTop_toTopOf="parent"
         app:tint="@color/design_default_color_on_primary" />
 
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/plotViewDeleteButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:contentDescription="@string/supprimer_le_plot"
+        android:src="@drawable/ic_baseline_delete_24"
+        android:visibility="gone"
+        app:backgroundTint="@color/design_default_color_error"
+        app:layout_constraintBottom_toTopOf="@+id/plotCreatedAt"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:tint="@color/design_default_color_on_error" />
+
     <TextView
         android:id="@+id/plotCreatedAt"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:background="@color/black"
+        android:background="@color/black_50_opacity"
         android:padding="8dp"
         android:textAppearance="@style/FirebaseUI.Text.Heading"
         android:textColor="@color/design_default_color_on_primary"

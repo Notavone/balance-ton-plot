@@ -4,7 +4,6 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.ImageDecoder;
 import android.location.Location;
@@ -15,19 +14,13 @@ import android.provider.MediaStore;
 import android.view.View;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.location.LocationListenerCompat;
 
-import com.firebase.ui.auth.AuthUI;
-import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract;
-import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -40,6 +33,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -49,7 +43,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
@@ -59,6 +52,7 @@ import fr.notavone.balance_ton_plot.R;
 import fr.notavone.balance_ton_plot.entities.Plot;
 import fr.notavone.balance_ton_plot.entities.PlotClusterItem;
 import fr.notavone.balance_ton_plot.utils.CustomClusterRenderer;
+import fr.notavone.balance_ton_plot.utils.PermissionUtils;
 import fr.notavone.balance_ton_plot.utils.UiChangeListener;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, LocationListenerCompat {
@@ -67,6 +61,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private final Logger logger = Logger.getLogger(MainActivity.class.getName());
     private final CollectionReference plotsCollection = FirebaseFirestore.getInstance().collection("plots");
     private final StorageReference storage = FirebaseStorage.getInstance().getReference().child("plots");
+    private final PermissionUtils permissionUtils = new PermissionUtils(this);
     private final FirebaseAuth auth = FirebaseAuth.getInstance();
 
     private FusedLocationProviderClient locationService;
@@ -74,48 +69,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private ClusterManager<PlotClusterItem> clusterManager;
     private Uri fileUri;
-    private ActivityResultLauncher<Intent> intentActivityResultLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), (perms) -> {
-        }).launch(
-                new String[]{
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION,
-                        Manifest.permission.INTERNET,
-                        Manifest.permission.READ_EXTERNAL_STORAGE,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                }
-        );
-
-        this.locationService = LocationServices.getFusedLocationProviderClient(this);
-        this.intentActivityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), handleCameraResult);
-
         View view = getWindow().getDecorView();
         view.setOnSystemUiVisibilityChangeListener(new UiChangeListener(view));
 
+        permissionUtils.requestPermission(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.INTERNET);
+
+        this.locationService = LocationServices.getFusedLocationProviderClient(this);
+
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         if (mapFragment != null) mapFragment.getMapAsync(this);
-
-        if (auth.getCurrentUser() == null) {
-            signInLauncher.launch(signInIntent);
-        }
     }
-
-    @SuppressLint("MissingPermission")
-    private final ActivityResultCallback<ActivityResult> handleCameraResult = (result) -> {
-        if (result.getResultCode() != Activity.RESULT_OK) return;
-        if (!hasPermission(Manifest.permission.ACCESS_FINE_LOCATION) && !hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION))
-            return;
-
-        this.locationService.getLastLocation()
-                .addOnSuccessListener(this, this::onLocationGatheringSuccess)
-                .addOnFailureListener((exception) -> logger.warning(exception.getMessage()));
-    };
 
     @SuppressLint({"MissingPermission", "PotentialBehaviorOverride"})
     @Override
@@ -138,16 +107,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         map.getUiSettings().setCompassEnabled(false);
         map.getUiSettings().setMyLocationButtonEnabled(false);
 
-        if (hasPermission(Manifest.permission.ACCESS_FINE_LOCATION) || hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+        if (permissionUtils.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION) || permissionUtils.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION)) {
             map.setMyLocationEnabled(true);
 
-            this.plotsCollection.get()
-                    .addOnSuccessListener(addPlotsToMap)
-                    .addOnFailureListener(e -> logger.warning(e.getMessage()));
+            this.plotsCollection.get().addOnSuccessListener(addPlotsToMap).addOnFailureListener(e -> logger.warning(e.getMessage()));
 
-            locationService.getLastLocation()
-                    .addOnSuccessListener(this, this::moveCameraToSelf)
-                    .addOnFailureListener(e -> logger.warning(e.getMessage()));
+            locationService.getLastLocation().addOnSuccessListener(this, this::moveCameraToSelf).addOnFailureListener(e -> logger.warning(e.getMessage()));
         }
     }
 
@@ -158,16 +123,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    private boolean hasPermission(String permission) {
-        return ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED;
-    }
-
     private final OnSuccessListener<QuerySnapshot> addPlotsToMap = (queryDocumentSnapshots) -> {
         List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
         Collection<PlotClusterItem> plots = new ArrayList<>(documents.size());
         for (DocumentSnapshot document : documents) {
             Plot plot = document.toObject(Plot.class);
-            if (plot != null) plots.add(new PlotClusterItem(plot));
+            if (plot != null) {
+                plot.setId(document.getId());
+                plots.add(new PlotClusterItem(plot));
+            }
         }
 
         if (clusterManager.addItems(plots)) {
@@ -220,26 +184,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         if (byteArray.length <= 0) return;
 
-        storage.child(fileUri.getLastPathSegment()).putBytes(byteArray)
-                .addOnSuccessListener((taskSnapshot) -> {
-                    if (taskSnapshot.getMetadata() != null && taskSnapshot.getMetadata().getReference() != null) {
-                        logger.info("Image uploaded successfully " + taskSnapshot.getMetadata().getReference().getDownloadUrl());
-                    }
+        storage.child(fileUri.getLastPathSegment()).putBytes(byteArray).addOnSuccessListener((taskSnapshot) -> {
+            if (taskSnapshot.getMetadata() != null && taskSnapshot.getMetadata().getReference() != null) {
+                logger.info("Image uploaded successfully " + taskSnapshot.getMetadata().getReference().getDownloadUrl());
+            }
 
-                    Plot plot = new Plot(fileUri.getLastPathSegment(), location.getLatitude(), location.getLongitude(), auth.getCurrentUser().getUid());
-                    plotsCollection.add(plot)
-                            .addOnSuccessListener(documentReference -> {
-                                Toast.makeText(this, "Image sauvegardée", Toast.LENGTH_SHORT).show();
+            Plot plot = new Plot(fileUri.getLastPathSegment(), new GeoPoint(location.getLatitude(), location.getLongitude()), auth.getCurrentUser().getUid());
+            plotsCollection.add(plot).addOnSuccessListener(documentReference -> {
+                plot.setId(documentReference.getId());
+                Toast.makeText(this, "Image sauvegardée", Toast.LENGTH_SHORT).show();
 
-                                if (this.clusterManager != null) {
-                                    PlotClusterItem plotClusterItem = new PlotClusterItem(plot);
-                                    if (clusterManager.addItem(plotClusterItem))
-                                        clusterManager.cluster();
-                                }
-                            })
-                            .addOnFailureListener(e -> logger.warning(e.getMessage()));
-                })
-                .addOnFailureListener((exception) -> logger.warning(exception.getMessage()));
+                if (this.clusterManager != null) {
+                    PlotClusterItem plotClusterItem = new PlotClusterItem(plot);
+                    if (clusterManager.addItem(plotClusterItem)) clusterManager.cluster();
+                }
+            }).addOnFailureListener(e -> logger.warning(e.getMessage()));
+        }).addOnFailureListener((exception) -> logger.warning(exception.getMessage()));
 
     }
 
@@ -263,32 +223,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @SuppressLint("MissingPermission")
     public void handleMyPositionClick(View view) {
-        if (hasPermission(Manifest.permission.ACCESS_FINE_LOCATION) || hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION)) {
-            locationService.getLastLocation()
-                    .addOnSuccessListener(this, this::moveCameraToSelf)
-                    .addOnFailureListener(e -> logger.warning(e.getMessage()));
+        if (permissionUtils.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION) || permissionUtils.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+            locationService.getLastLocation().addOnSuccessListener(this, this::moveCameraToSelf).addOnFailureListener(e -> logger.warning(e.getMessage()));
         }
     }
 
-    private final Intent signInIntent = AuthUI.getInstance()
-            .createSignInIntentBuilder()
-            .setAvailableProviders(Arrays.asList(
-                    new AuthUI.IdpConfig.PhoneBuilder().build(),
-                    new AuthUI.IdpConfig.EmailBuilder().build()
-            ))
-            .setIsSmartLockEnabled(false)
-            .build();
+    @SuppressLint("MissingPermission")
+    private final ActivityResultLauncher<Intent> intentActivityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), (result) -> {
+        if (result.getResultCode() != Activity.RESULT_OK) return;
+        if (!permissionUtils.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION) && !permissionUtils.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION))
+            return;
 
-    private final ActivityResultLauncher<Intent> signInLauncher = registerForActivityResult(
-            new FirebaseAuthUIActivityResultContract(),
-            this::onSignInResult
-    );
-
-    private void onSignInResult(FirebaseAuthUIAuthenticationResult result) {
-        if (result.getResultCode() == RESULT_OK) {
-            logger.info("User signed in");
-        } else {
-            logger.warning("User not signed in");
-        }
-    }
+        this.locationService.getLastLocation().addOnSuccessListener(this, this::onLocationGatheringSuccess).addOnFailureListener((exception) -> logger.warning(exception.getMessage()));
+    });
 }

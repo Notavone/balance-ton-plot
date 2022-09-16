@@ -16,7 +16,7 @@ public class PlotClusterItem implements ClusterItem {
     @NonNull
     @Override
     public LatLng getPosition() {
-        return new LatLng(plot.getLatitude(), plot.getLongitude());
+        return new LatLng(plot.getLocation().getLatitude(), plot.getLocation().getLongitude());
     }
 
     @Nullable
