@@ -1,0 +1,62 @@
+{
+  "project_info": {
+    "project_number": "155694947131",
+    "project_id": "balance-ton-plot",
+    "storage_bucket": "balance-ton-plot.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:155694947131:android:26d872e9b189fcaf30751e",
+        "android_client_info": {
+          "package_name": "fr.notavone.balance_ton_plot"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "155694947131-fiim5cu1e1femk98bitf5jg933676kfq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "fr.notavone.balance_ton_plot",
+            "certificate_hash": "0314f6d385370db925de19a41a5e52bfbb385fd9"
+          }
+        },
+        {
+          "client_id": "155694947131-vrbhk3ifilbv0jspvrt6u3dveb9rvqbk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "fr.notavone.balance_ton_plot",
+            "certificate_hash": "d0518faa77a3ede7201999d1707fca07301c5947"
+          }
+        },
+        {
+          "client_id": "155694947131-14de2so0r97f94i7ae0gl273dn2cd23n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpGQLHVMXuzgu7vJFE97G5gewSDx_F_ug"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "155694947131-14de2so0r97f94i7ae0gl273dn2cd23n.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "155694947131-l066mt1iv2rpa1t8jcct3ra992mjs0pi.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.btp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
