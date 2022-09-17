@@ -10,8 +10,11 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.CameraSelector;
@@ -20,7 +23,6 @@ import androidx.camera.core.ImageCaptureException;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
-import androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -32,8 +34,9 @@ import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 import fr.notavone.balance_ton_plot.R;
+import fr.notavone.balance_ton_plot.utils.UiChangeListener;
 
-public class CameraActivity extends AppCompatActivity implements OnRequestPermissionsResultCallback {
+public class CameraActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_PERMISSIONS = 10;
 
     private ImageCapture imageCapture;
@@ -45,8 +48,11 @@ public class CameraActivity extends AppCompatActivity implements OnRequestPermis
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
 
+        View view = getWindow().getDecorView();
+        view.setOnSystemUiVisibilityChangeListener(new UiChangeListener(view));
+
         cameraExecutor = Executors.newSingleThreadExecutor();
-        Button button = findViewById(R.id.captureButton);
+        ImageView button = findViewById(R.id.captureButton);
         button.setOnClickListener(this::takePhoto);
 
         FloatingActionButton backButton = findViewById(R.id.cameraBackButton);
@@ -54,6 +60,11 @@ public class CameraActivity extends AppCompatActivity implements OnRequestPermis
 
         if (allPermissionsGranted()) {
             startCamera();
+        } else {
+            handleRequestPermissions.launch(new String[]{
+                    Manifest.permission.CAMERA,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            });
         }
     }
 
@@ -137,18 +148,14 @@ public class CameraActivity extends AppCompatActivity implements OnRequestPermis
         cameraExecutor.shutdown();
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_CODE_PERMISSIONS) {
-            if (allPermissionsGranted()) {
-                startCamera();
-            } else {
-                Toast.makeText(this, "Permissions non accordées", Toast.LENGTH_SHORT).show();
-                finish();
-            }
+    private final ActivityResultLauncher<String[]> handleRequestPermissions = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
+        if (allPermissionsGranted()) {
+            startCamera();
+        } else {
+            Toast.makeText(this, "Permissions non accordées", Toast.LENGTH_SHORT).show();
+            finish();
         }
-    }
+    });
 
     private void retour(View view) {
         finish();

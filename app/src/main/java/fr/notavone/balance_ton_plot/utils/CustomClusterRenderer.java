@@ -15,6 +15,6 @@ public class CustomClusterRenderer<T extends ClusterItem> extends DefaultCluster
 
     @Override
     protected boolean shouldRenderAsCluster(Cluster<T> cluster) {
-        return cluster.getSize() > 1 && cluster.getSize() < 20;
+        return cluster.getSize() > 1;
     }
 }

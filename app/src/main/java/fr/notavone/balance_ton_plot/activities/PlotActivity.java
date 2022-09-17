@@ -37,7 +37,6 @@ public class PlotActivity extends AppCompatActivity {
     private final FirebaseAuth auth = FirebaseAuth.getInstance();
     private Plot plot;
 
-    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
