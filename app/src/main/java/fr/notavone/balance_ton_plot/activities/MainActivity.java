@@ -23,9 +23,12 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.OnMapsSdkInitializedCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
@@ -50,7 +53,7 @@ import fr.notavone.balance_ton_plot.entities.PlotClusterItem;
 import fr.notavone.balance_ton_plot.utils.CustomClusterRenderer;
 import fr.notavone.balance_ton_plot.utils.UiChangeListener;
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, OnMapsSdkInitializedCallback {
     final int MAP_ZOOM = 17;
 
     private final Logger logger = Logger.getLogger(MainActivity.class.getName());
@@ -69,6 +72,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        MapsInitializer.initialize(this, MapsInitializer.Renderer.LATEST, this);
 
         View view = getWindow().getDecorView();
         view.setOnSystemUiVisibilityChangeListener(new UiChangeListener(view));
@@ -94,6 +99,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(@NonNull GoogleMap googleMap) {
         this.map = googleMap;
         this.clusterManager = new ClusterManager<>(this, googleMap);
+
+        googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.map_style));
 
         clusterManager.setRenderer(new CustomClusterRenderer<>(this, googleMap, clusterManager));
         clusterManager.setOnClusterItemClickListener(handleClusterItemClick());
@@ -254,4 +261,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             finish();
         }
     });
+
+    @Override
+    public void onMapsSdkInitialized(@NonNull MapsInitializer.Renderer renderer) {
+        switch (renderer) {
+            case LATEST:
+                logger.info("Google Maps SDK initialized with latest renderer");
+                break;
+            case LEGACY:
+                logger.info("Google Maps SDK initialized with legacy renderer");
+                break;
+        }
+    }
 }

@@ -63,13 +63,6 @@ public class PlotActivity extends AppCompatActivity {
         Intent intent = getIntent();
         plot = intent.getParcelableExtra("plot");
 
-        registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), (perms) -> {
-        }).launch(new String[]{
-                Manifest.permission.READ_EXTERNAL_STORAGE,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                Manifest.permission.INTERNET,
-        });
-
         View view = getWindow().getDecorView();
         view.setOnSystemUiVisibilityChangeListener(new UiChangeListener(view));
 
@@ -77,7 +70,6 @@ public class PlotActivity extends AppCompatActivity {
             finish();
             return;
         }
-
 
         File file = null;
         DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT);
