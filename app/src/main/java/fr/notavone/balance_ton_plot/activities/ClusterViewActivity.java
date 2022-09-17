@@ -57,8 +57,6 @@ public class ClusterViewActivity extends AppCompatActivity {
     }
 
     public void retour(View view) {
-        Intent intent = new Intent(this, MainActivity.class);
         finish();
-        startActivity(intent);
     }
 }

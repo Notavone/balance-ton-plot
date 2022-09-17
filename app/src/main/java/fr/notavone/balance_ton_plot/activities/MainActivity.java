@@ -9,8 +9,6 @@ import android.graphics.ImageDecoder;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.MediaStore;
 import android.view.View;
 import android.widget.Toast;
 
@@ -18,7 +16,6 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.FileProvider;
 import androidx.core.location.LocationListenerCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -40,14 +37,12 @@ import com.google.firebase.storage.StorageReference;
 import com.google.maps.android.clustering.ClusterManager;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 
-import fr.notavone.balance_ton_plot.BuildConfig;
 import fr.notavone.balance_ton_plot.R;
 import fr.notavone.balance_ton_plot.entities.Plot;
 import fr.notavone.balance_ton_plot.entities.PlotClusterItem;
@@ -204,21 +199,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void handleAddImageClick(View view) {
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-
-        File file = null;
-        try {
-            File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-            file = File.createTempFile("plot_", ".jpg", storageDir);
-        } catch (Exception e) {
-            logger.warning(e.getMessage());
-        }
-
-        if (file != null) {
-            this.fileUri = FileProvider.getUriForFile(this, BuildConfig.APPLICATION_ID + ".fileprovider", file);
-            intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
-            intentActivityResultLauncher.launch(intent);
-        }
+        Intent intent = new Intent(this, CameraActivity.class);
+        intentActivityResultLauncher.launch(intent);
     }
 
     @SuppressLint("MissingPermission")
@@ -233,6 +215,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (result.getResultCode() != Activity.RESULT_OK) return;
         if (!permissionUtils.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION) && !permissionUtils.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION))
             return;
+
+        Intent intent = result.getData();
+        if (intent == null) return;
+
+        Uri uri = intent.getData();
+        if(uri == null) return;
+
+        fileUri = uri;
 
         this.locationService.getLastLocation().addOnSuccessListener(this, this::onLocationGatheringSuccess).addOnFailureListener((exception) -> logger.warning(exception.getMessage()));
     });
