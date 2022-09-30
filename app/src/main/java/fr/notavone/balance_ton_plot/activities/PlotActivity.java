@@ -1,6 +1,5 @@
 package fr.notavone.balance_ton_plot.activities;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -11,7 +10,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -32,11 +30,13 @@ import fr.notavone.balance_ton_plot.utils.UiChangeListener;
 
 public class PlotActivity extends AppCompatActivity {
     private final Logger logger = Logger.getLogger(PlotActivity.class.getName());
-    private final CollectionReference collection = FirebaseFirestore.getInstance().collection("plots");
+    private final CollectionReference plotsCollection = FirebaseFirestore.getInstance().collection("plots");
+    private final CollectionReference usersCollection = FirebaseFirestore.getInstance().collection("users");
     private final StorageReference storage = FirebaseStorage.getInstance().getReference().child("plots");
     private final FirebaseAuth auth = FirebaseAuth.getInstance();
     private Plot plot;
 
+    @SuppressLint("SetTextI18n")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,8 +75,18 @@ public class PlotActivity extends AppCompatActivity {
         DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT);
         String date = dateFormat.format(plot.getCreatedAt());
 
+
         TextView textView = findViewById(R.id.plotCreatedAt);
         textView.setText(date);
+
+        usersCollection.document(plot.getCreatedBy()).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    String username = documentSnapshot.getString("username");
+                    if (username != null) {
+                        textView.setText(username + " : " + textView.getText());
+                    }
+                })
+                .addOnFailureListener(e -> logger.severe(e.getMessage()));
 
         try {
             file = File.createTempFile(plot.getStorePath(), "", getCacheDir());
@@ -97,7 +107,7 @@ public class PlotActivity extends AppCompatActivity {
     }
 
     private void deletePlot(View view) {
-        collection.document(plot.getId()).delete()
+        plotsCollection.document(plot.getId()).delete()
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(this, "Plot supprimé !", Toast.LENGTH_SHORT).show();
                     logger.info("Plot deleted");
