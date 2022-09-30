@@ -1,5 +1,6 @@
 package fr.notavone.balance_ton_plot.adapters;
 
+import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
@@ -13,6 +14,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.timepicker.TimeFormat;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -35,7 +37,8 @@ public class PlotsGridAdapter extends RecyclerView.Adapter<PlotsGridAdapter.View
     private final Logger logger = Logger.getLogger(PlotsGridAdapter.class.getName());
     private final FirebaseAuth auth = FirebaseAuth.getInstance();
     private final StorageReference storage = FirebaseStorage.getInstance().getReference().child("plots");
-    private final CollectionReference collection = FirebaseFirestore.getInstance().collection("plots");
+    private final CollectionReference plotsCollection = FirebaseFirestore.getInstance().collection("plots");
+    private final CollectionReference usersCollection = FirebaseFirestore.getInstance().collection("users");
     private final ArrayList<Plot> plots;
 
     public PlotsGridAdapter(ArrayList<Plot> plots) {
@@ -49,6 +52,7 @@ public class PlotsGridAdapter extends RecyclerView.Adapter<PlotsGridAdapter.View
         return new ViewHolder(view);
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Plot plot = plots.get(position);
@@ -79,6 +83,15 @@ public class PlotsGridAdapter extends RecyclerView.Adapter<PlotsGridAdapter.View
         String date = dateFormat.format(plot.getCreatedAt());
         holder.plotCreatedAt.setText(date);
 
+        usersCollection.document(plot.getCreatedBy()).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    String username = documentSnapshot.getString("username");
+                    if (username != null) {
+                        holder.plotCreatedAt.setText(username + " : " + holder.plotCreatedAt.getText());
+                    }
+                })
+                .addOnFailureListener(e -> logger.severe(e.getMessage()));
+
         if (auth.getCurrentUser() != null) {
             auth.getCurrentUser().getIdToken(false).addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
@@ -95,7 +108,7 @@ public class PlotsGridAdapter extends RecyclerView.Adapter<PlotsGridAdapter.View
     private void deletePlot(View view, int position) {
         Plot plot = plots.get(position);
         logger.info("Deleting plot " + plot.getId());
-        collection.document(plot.getId()).delete()
+        plotsCollection.document(plot.getId()).delete()
                 .addOnSuccessListener(aVoid1 -> {
                     Toast.makeText(view.getContext(), "Plot supprimé !", Toast.LENGTH_SHORT).show();
                     logger.info("Plot deleted");

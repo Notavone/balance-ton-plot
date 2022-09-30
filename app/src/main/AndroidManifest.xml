@@ -28,6 +28,13 @@
         android:theme="@style/Theme.Balance_ton_plot"
         tools:targetApi="31">
         <activity
+            android:name=".activities.ProfileActivity"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
             android:name=".activities.CameraActivity"
             android:exported="false">
             <meta-data

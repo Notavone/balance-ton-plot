@@ -8,4 +8,8 @@
     <string name="retour" translatable="true">Retour</string>
     <string name="zoomer_sur_ma_position">Zoomer sur ma position</string>
     <string name="supprimer_le_plot">Supprimer le plot</string>
+    <string name="mon_profil">Mon profil</string>
+    <string name="mon_nom">Mon nom</string>
+    <string name="uuid">UUID</string>
+    <string name="empty_string" />
 </resources>

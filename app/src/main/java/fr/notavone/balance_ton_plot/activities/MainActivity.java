@@ -222,6 +222,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         handleCameraResult.launch(intent);
     }
 
+    public void handleMyProfileClick(View view) {
+        Intent intent = new Intent(this, ProfileActivity.class);
+        startActivity(intent);
+    }
+
     @SuppressLint("MissingPermission")
     public void handleMyPositionClick(View view) {
         if (hasLocationPermissions()) {

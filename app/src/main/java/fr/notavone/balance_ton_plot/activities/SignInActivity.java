@@ -10,12 +10,15 @@ import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract;
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
 public class SignInActivity extends AppCompatActivity {
+    private final FirebaseFirestore db = FirebaseFirestore.getInstance();
     private final Logger logger = Logger.getLogger(SignInActivity.class.getName());
     private final FirebaseAuth auth = FirebaseAuth.getInstance();
     private final AuthUI authUI = AuthUI.getInstance();
@@ -38,6 +41,11 @@ public class SignInActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+                .setPersistenceEnabled(true)
+                .build();
+        db.setFirestoreSettings(settings);
 
         if (auth.getCurrentUser() != null) {
             logger.info("User already signed in, skipping sign in activity");

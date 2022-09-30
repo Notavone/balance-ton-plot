@@ -37,4 +37,19 @@
         app:layout_constraintTop_toTopOf="parent"
         app:maxImageSize="30dp"
         app:tint="@color/design_default_color_on_secondary" />
+
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="84dp"
+        android:layout_marginTop="16dp"
+        android:contentDescription="@string/mon_profil"
+        android:onClick="handleMyProfileClick"
+        android:src="@drawable/ic_baseline_person_24"
+        app:backgroundTint="@color/design_default_color_secondary"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:maxImageSize="30dp"
+        app:tint="@color/design_default_color_on_secondary" />
 </androidx.constraintlayout.widget.ConstraintLayout>
