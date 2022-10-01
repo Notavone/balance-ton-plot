@@ -144,7 +144,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private final OnSuccessListener<QuerySnapshot> addPlotsToMap = (queryDocumentSnapshots) -> {
         List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
-        Collection<PlotClusterItem> plots = new ArrayList<>(documents.size());
+        Collection<PlotClusterItem> plots = new ArrayList<>();
         for (DocumentSnapshot document : documents) {
             Plot plot = document.toObject(Plot.class);
             if (plot != null) {
